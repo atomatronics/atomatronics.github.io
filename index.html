@@ -181,6 +181,11 @@
   }
 }
 
+.sky-popover { max-height: calc(100% - 40px); overflow-y: auto; }
+@media (max-width: 1050px) {
+  .sky-popover { max-height: calc(100% - 164px); }
+}
+
 </style>
 </head>
 <body>
@@ -248,7 +253,7 @@
     <button class="compass-card" id="compassBtn" aria-label="Open sky bearings and compass details">
       <canvas id="compass" width="192" height="192" aria-hidden="true"></canvas><span>SKY COMPASS</span><small id="compassOrigin">Sky at view centre</small>
     </button>
-    <div class="sky-popover" id="skyPopover" hidden><div class="popover-heading"><strong>Sky directions</strong><button class="close-button" id="closeSky" aria-label="Close sky directions">×</button></div><p id="skyOrigin"></p><div id="skyTable"></div><p class="fineprint">Direction is measured clockwise from north. Height is measured from the horizon, where the sky meets the ground. This view assumes a clear, flat horizon.</p></div>
+    <div class="sky-popover" id="skyPopover" hidden><div class="popover-heading"><strong>Sky directions</strong><button class="close-button" id="closeSky" aria-label="Close sky directions">×</button></div><p id="skyOrigin"></p><div id="skyTable"></div><p class="fineprint">Direction is measured clockwise from north. Height is measured from the horizon, where the sky meets the ground. This view assumes a clear, flat horizon. On the dial, filled dots are above the horizon and outlined dots are below it.</p></div>
     <div class="stage-controls"><div class="zoom-controls"><button id="zoomIn" aria-label="Zoom in">+</button><button id="zoomOut" aria-label="Zoom out">−</button></div><button id="rotateBtn" aria-pressed="false">Auto-rotate</button><button id="resetBtn">Reset view</button><button id="cloudsBtn" aria-pressed="true">Clouds</button><button id="lightBtn" aria-pressed="true">Day / night</button></div>
     <div class="stage-bottom"><span id="viewCoordinates">Loading coordinates</span><span id="scaleNote">Drag to orbit · Scroll to zoom</span></div>
     <div id="renderError" class="render-error" hidden></div>
@@ -289,11 +294,55 @@
 <dialog id="compareDialog"><div class="dialog-heading"><div><span class="eyebrow">MISSION PLANNING</span><h2>Compare Earth test sites</h2></div><button class="close-button" data-close="compareDialog" aria-label="Close comparison">×</button></div><div class="compare-selects"><label>First location<select id="compareA"></select></label><label>Second location<select id="compareB"></select></label></div><div id="comparisonContent"></div><p class="fineprint">Suggested tests describe possible uses. Site suitability needs a mission-specific assessment.</p></dialog>
 <dialog id="sourcesDialog"><div class="dialog-heading"><div><span class="eyebrow">ATOMATRONICS</span><h2>About this explorer</h2></div><button class="close-button" data-close="sourcesDialog" aria-label="Close sources">×</button></div>
 <p>Built for the NASA Space Apps Challenge to explore Earth environments that can support Moon and Mars technology trials.</p>
-<h3>Celestial directions</h3><p>Astronomy Engine 2.1.19 calculates Earth-centred apparent directions for the selected UTC time. Precession, nutation, light travel time and aberration are included. The compass uses the selected site's location, or the centre of the Earth view, with lunar parallax included.</p>
+<h3>Celestial directions</h3><p>Astronomy Engine 2.1.19 calculates Earth-centred apparent directions for the selected UTC time. Precession, nutation, light travel time and aberration are included. The compass uses the selected site's location, or the centre of the Earth view, with observer parallax included. Titan and Europa compass readings use the same bundled Horizons vectors as the direction view.</p>
 <p>Compare worlds uses proportional mean diameters. Directions from Earth shows calculated Moon, Mars, Titan and Europa bearings with compressed spacing. Titan and Europa use <a href="https://ssd.jpl.nasa.gov/horizons/" target="_blank" rel="noopener noreferrer">NASA JPL Horizons</a> vectors sampled every six hours from 2025 through 2030. Earth illumination follows the selected time. The background stars are decorative.</p>
 <p><a href="https://github.com/cosinekitty/astronomy" target="_blank" rel="noopener noreferrer">Astronomy Engine · MIT licence ↗</a> · <a href="https://ssd.jpl.nasa.gov/sats/phys_par/" target="_blank" rel="noopener noreferrer">NASA JPL moon diameters ↗</a> · <a href="https://ssd.jpl.nasa.gov/planets/phys_par.html" target="_blank" rel="noopener noreferrer">NASA JPL planet diameters ↗</a></p>
 <h3>World imagery</h3><p>Earth · NASA Earthdata GIBS Blue Marble. Moon · NASA GSFC Scientific Visualization Studio and LRO. Mars · NASA Viking. Titan · <a href="https://science.nasa.gov/photojournal/titan-mosaic-the-surface-under-the-haze/" target="_blank" rel="noopener noreferrer">Cassini surface mosaic</a> (NASA/JPL-Caltech/University of Arizona) and Cassini colour portrait (NASA/JPL/Space Science Institute). Europa · <a href="https://maps.jpl.nasa.gov/tmaps/jupiter.html" target="_blank" rel="noopener noreferrer">Voyager surface mosaic</a> (Caltech/JPL/USGS), Voyager 1 portrait (NASA/JPL) and Galileo ridge imagery (NASA/JPL/DLR). Three.js is distributed under the MIT licence.</p>
 <h3>Analog profiles and imagery</h3><p>The eight reference sites and test suggestions were compiled by the team. The Idaho terrain candidates were screened using NASA Earth, Moon and Mars elevations. Surface and geology drawings are labelled illustrations. The orbital tab requests NASA GIBS Blue Marble regional imagery over the internet. This static composite provides geographic context; the UTC control changes celestial calculations.</p><p><a href="https://nasa-gibs.github.io/gibs-api-docs/" target="_blank" rel="noopener noreferrer">NASA GIBS documentation ↗</a></p><p class="fineprint">Independent educational prototype. NASA Space Apps participation and use of NASA imagery do not establish NASA endorsement. Earth analogs reproduce selected environmental features; mission qualification requires additional testing.</p>
+<details><summary>Software licenses</summary>
+<h3>Three.js</h3><pre style="white-space:pre-wrap">The MIT License
+
+Copyright © 2010-2023 three.js authors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the &quot;Software&quot;), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.</pre>
+<h3>Astronomy Engine</h3><pre style="white-space:pre-wrap">MIT License
+
+Copyright (c) 2019-2025 Don Cross &lt;cosinekitty@gmail.com&gt;
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the &quot;Software&quot;), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</pre>
+</details>
 </dialog>
 <noscript><div class="noscript">Enable JavaScript to use the interactive globe.</div></noscript>
 <script>
@@ -1113,11 +1162,24 @@ function updateAstronomy() {
   updateSky();
   updatePlanetNumbers();
 }
+function satelliteEquator(name, date, observer) {
+  const vector = horizonsVector(name, date);
+  if (!vector) return null;
+  const apparent = Astronomy.RotateVector(Astronomy.Rotation_EQJ_EQD(date), vector);
+  const site = Astronomy.ObserverVector(date, observer, true);
+  return Astronomy.EquatorFromVector(new Astronomy.Vector(
+    apparent.x - site.x, apparent.y - site.y, apparent.z - site.z, apparent.t
+  ));
+}
 function updateSky() {
   const origin = localObserver();
   const observer = new Astronomy.Observer(origin.lat, origin.lon, 0);
-  state.sky = COMPASS_BODIES.map(name => {
-    const eq = Astronomy.Equator(name, state.date, observer, true, true);
+  const names = [...COMPASS_BODIES, ...Object.keys(HORIZONS_VECTORS)];
+  state.sky = names.map(name => {
+    const eq = HORIZONS_VECTORS[name]
+      ? satelliteEquator(name, state.date, observer)
+      : Astronomy.Equator(name, state.date, observer, true, true);
+    if (!eq) return { name, azimuth: null, altitude: null };
     const horizontal = Astronomy.Horizon(state.date, observer, eq.ra, eq.dec);
     return { name, azimuth: horizontal.azimuth, altitude: horizontal.altitude };
   });
@@ -1130,7 +1192,13 @@ function updateSky() {
   refreshSunMission();
 }
 function skyTableHtml() {
-  return `<table class="sky-table"><thead><tr><th>Body</th><th>Direction</th><th>Height in sky</th></tr></thead><tbody>${state.sky.map(body => `<tr><td><span class="sky-dot" style="--body-color:${COLORS[body.name]}"></span>${body.name}</td><td>${body.azimuth.toFixed(1)}°</td><td>${body.altitude > 0 ? '+' : ''}${body.altitude.toFixed(1)}°<small>${body.altitude >= 0 ? 'Above horizon' : 'Below horizon'}</small></td></tr>`).join('')}</tbody></table>`;
+  const rows = state.sky.map(({ name, azimuth, altitude }) => {
+    const label = `<td><span class="sky-dot" style="--body-color:${COLORS[name]}"></span>${name}</td>`;
+    if (azimuth === null) return `<tr>${label}<td colspan="2">Data covers 2025–2030</td></tr>`;
+    const height = `${altitude > 0 ? '+' : ''}${altitude.toFixed(1)}°`;
+    return `<tr>${label}<td>${azimuth.toFixed(1)}°</td><td>${height}<small>${altitude >= 0 ? 'Above horizon' : 'Below horizon'}</small></td></tr>`;
+  }).join('');
+  return `<table class="sky-table"><thead><tr><th>Body</th><th>Direction</th><th>Height in sky</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 function drawCompass() {
   const ctx = $('compass').getContext('2d');
@@ -1149,8 +1217,9 @@ function drawCompass() {
     ctx.fillStyle = label === 'N' ? '#83dfff' : '#92a7c1'; ctx.fillText(label, x, y);
   });
   ctx.fillStyle = '#bed5e8'; ctx.beginPath(); ctx.moveTo(96, 65); ctx.lineTo(88, 108); ctx.lineTo(96, 101); ctx.lineTo(104, 108); ctx.closePath(); ctx.fill();
-  state.sky.filter(body => body.name !== 'Sun').forEach((body, index) => {
-    const r = 37 + index * 10;
+  state.sky.forEach((body, index) => {
+    if (body.azimuth === null) return;
+    const r = 30 + index * 9;
     const angle = body.azimuth * DEG;
     const x = cx + Math.sin(angle) * r, y = cy - Math.cos(angle) * r;
     ctx.globalAlpha = body.altitude >= 0 ? 1 : 0.5;
