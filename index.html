@@ -186,6 +186,9 @@
   .sky-popover { max-height: calc(100% - 164px); }
 }
 
+.body-label { width: min(132px, 40%); height: 38px; padding: 3px 4px; line-height: 14px; }
+.body-label small { font-size: 8px; line-height: 11px; margin-top: 2px; }
+
 </style>
 </head>
 <body>
@@ -1062,7 +1065,7 @@ const BODY_LAYOUT = {
   Moon: { radius: 0.27, distance: 2.8, texture: 'moon' },
   Mars: { radius: 0.53, distance: 4.2, texture: 'mars' },
   Titan: { radius: 0.40, distance: 5.6, texture: 'titan_surface', portrait: 'titan' },
-  Europa: { radius: 0.245, distance: 4.9, texture: 'europa_surface', portrait: 'europa' }
+  Europa: { radius: 0.245, distance: 6.6, texture: 'europa_surface', portrait: 'europa' }
 };
 const state = {
   body: 'Earth', filter: 'All', query: '', selected: null, gallery: 0,
@@ -1410,6 +1413,22 @@ function screenPosition(vector) {
   projected.copy(vector).project(camera);
   return { x: (projected.x * 0.5 + 0.5) * width, y: (-projected.y * 0.5 + 0.5) * height, inView: projected.z > -1 && projected.z < 1 };
 }
+function placeDirectionLabel(x, y, width, height, occupied) {
+  const halfWidth = Math.min(132, width * 0.4) / 2;
+  const labelHeight = 38;
+  const left = clamp(x, halfWidth + 8, width - halfWidth - 8) - halfWidth;
+  const right = left + halfWidth * 2;
+  const minTop = 125, maxTop = height - 110;
+  const neighbours = occupied.filter(box => left < box.right + 6 && right + 6 > box.left);
+  const options = [y, ...neighbours.map(box => box.bottom + 6), ...neighbours.map(box => box.top - labelHeight - 6)];
+  for (const top of options) {
+    const bottom = top + labelHeight;
+    if (top < minTop || top > maxTop) continue;
+    if (neighbours.some(box => top < box.bottom + 6 && bottom + 6 > box.top)) continue;
+    return { left, right, top, bottom };
+  }
+  return null;
+}
 function updateLabels() {
   const visible = new Set(visibleSites().map(site => site.id));
   if (state.selected) visible.add(state.selected.id);
@@ -1431,14 +1450,22 @@ function updateLabels() {
     label.hidden = overlaps;
     if (!overlaps) occupied.push(p);
   }
+  const directionLabels = [];
   for (const [name, el] of bodyElements) {
     el.hidden = state.body !== 'System' || !state.bodyData[name];
     if (el.hidden) continue;
     const mesh = planetMeshes[name];
     const p = screenPosition(mesh.position.clone().add(new THREE.Vector3(0, -BODY_LAYOUT[name].radius - 0.12, 0)));
-    el.hidden = !p.inView || p.x < 45 || p.x > width - 45 || p.y < 125 || p.y > height - 110;
-    el.style.left = `${p.x}px`; el.style.top = `${p.y}px`;
-    el.innerHTML = `${name}<small>${distanceText(state.bodyData[name].distance)} from Earth</small>`;
+    const box = p.inView && p.x >= 0 && p.x <= width
+      ? placeDirectionLabel(p.x, p.y, width, height, directionLabels)
+      : null;
+    el.hidden = !box;
+    if (!box) continue;
+    directionLabels.push(box);
+    el.style.left = `${(box.left + box.right) / 2}px`;
+    el.style.top = `${box.top}px`;
+    const label = `${name}<small>${distanceText(state.bodyData[name].distance)} from Earth</small>`;
+    if (el.innerHTML !== label) el.innerHTML = label;
   }
 }
 function animate(timestamp) {
@@ -1495,10 +1522,10 @@ function setBody(name) {
     Mars: ['THE RED PLANET', 'Mars', 'Explore a world of rock, dust, and buried water ice.'],
     Titan: ['SATURN’S LARGEST MOON', 'Titan', 'Orbit the model and explore how Namibia’s dunes help us study Titan.'],
     Europa: ['ONE OF JUPITER’S ICY MOONS', 'Europa', 'Orbit the model and explore how Greenland’s ice ridges help us study Europa.'],
-    System: ['DIRECTIONS FROM EARTH', 'Directions from Earth', 'Calculated positions for the selected UTC time.']
+    System: ['DIRECTIONS FROM EARTH', 'Directions from Earth', 'Directions only. Body sizes and distances are not to scale.']
   }[name];
   $('viewEyebrow').textContent = info[0]; $('viewTitle').textContent = info[1]; $('viewSubtitle').textContent = info[2];
-  $('scaleNote').textContent = name === 'System' ? 'Spacing compressed · Actual distances in table' : 'Drag to orbit · Scroll to zoom';
+  $('scaleNote').textContent = name === 'System' ? 'Actual Earth distances in the table' : 'Drag to orbit · Scroll to zoom';
   if (name === 'Earth') {
     state.lat = state.selected?.lat ?? 28; state.lon = state.selected?.lon ?? -100; state.distance = 3.65;
     $('planetInfo').hidden = true; $('directory').hidden = !!state.selected; $('profile').hidden = !state.selected;
@@ -1669,7 +1696,7 @@ function renderPlanetInfo() {
   const image = name === 'System' ? 'earth_daymap' : (BODY_LAYOUT[name].portrait || BODY_LAYOUT[name].texture);
   const mission = name === 'Mars' ? MISSIONS.marsTerrain : MISSIONS[name.toLowerCase()];
   const distantMoon = Boolean(HORIZONS_VECTORS[name]);
-  $('planetInfo').innerHTML = `<div class="profile-inner"><button class="back-button" id="planetBack">← Earth test sites</button><div class="body-preview" style="background-image:url('${ASSETS[image]}')"></div><span class="eyebrow">${name === 'System' ? 'SPATIAL VIEW' : 'CELESTIAL EXPLORER'}</span><h2>${text[0]}</h2><p>${text[1]}</p><div id="planetNumbers"></div><p class="fineprint">${name === 'System' ? 'Spacing is compressed. The table shows calculated distances. Titan and Europa use bundled NASA JPL Horizons data for 2025–2030. Use Compare worlds for relative diameters.' : name === 'Titan' ? 'The model shows a grayscale Cassini near-infrared surface map. The colour portrait shows Titan through its haze.' : name === 'Europa' ? 'The model shows a grayscale Voyager surface mosaic. Surface orientation is illustrative.' : 'Surface texture and orientation are illustrative.'}</p><div id="planetDistances"></div>${mission ? `<button id="planetMission" class="mission-primary full-button planet-mission">${mission.title} →</button>` : ''}<button id="planetAnalogs" class="full-button">${name === 'System' || distantMoon ? 'Explore all Earth test sites' : `Explore ${name} test sites`}</button><div class="section-heading"><strong>Compass reference</strong></div><p class="fineprint">The small compass shows sky bearings at your selected Earth site, or at the last Earth view centre. Click it for altitude and bearing readings.</p></div>`;
+  $('planetInfo').innerHTML = `<div class="profile-inner"><button class="back-button" id="planetBack">← Earth test sites</button><div class="body-preview" style="background-image:url('${ASSETS[image]}')"></div><span class="eyebrow">${name === 'System' ? 'SPATIAL VIEW' : 'CELESTIAL EXPLORER'}</span><h2>${text[0]}</h2><p>${text[1]}</p><div id="planetNumbers"></div><p class="fineprint">${name === 'System' ? 'Body sizes and diagram spacing are not to scale. The table shows calculated distances. Titan and Europa use bundled NASA JPL Horizons data for 2025–2030. Use Compare worlds for relative diameters.' : name === 'Titan' ? 'The model shows a grayscale Cassini near-infrared surface map. The colour portrait shows Titan through its haze.' : name === 'Europa' ? 'The model shows a grayscale Voyager surface mosaic. Surface orientation is illustrative.' : 'Surface texture and orientation are illustrative.'}</p><div id="planetDistances"></div>${mission ? `<button id="planetMission" class="mission-primary full-button planet-mission">${mission.title} →</button>` : ''}<button id="planetAnalogs" class="full-button">${name === 'System' || distantMoon ? 'Explore all Earth test sites' : `Explore ${name} test sites`}</button><div class="section-heading"><strong>Compass reference</strong></div><p class="fineprint">The small compass shows sky bearings at your selected Earth site, or at the last Earth view centre. Click it for altitude and bearing readings.</p></div>`;
   $('planetBack').onclick = showDirectory;
   if (mission) $('planetMission').onclick = () => openMission(name === 'Mars' ? 'marsTerrain' : name.toLowerCase());
   $('planetAnalogs').onclick = () => { state.filter = text[2]; updateFilterButtons(); showDirectory(); };
